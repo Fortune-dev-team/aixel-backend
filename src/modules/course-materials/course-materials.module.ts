@@ -6,6 +6,6 @@ import { CourseMaterialsService } from './course-materials.service';
 @Module({
   imports: [AuthModule],
   controllers: [CourseMaterialsController],
-  providers: [CourseMaterialsService]
+  providers: [CourseMaterialsService],
 })
 export class CourseMaterialsModule {}

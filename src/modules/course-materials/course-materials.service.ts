@@ -16,4 +16,19 @@ export class CourseMaterialsService {
         }
     }
 
+    findOne(
+        goalId: string,
+        levelId: string,
+        materialId: string,
+        user: AuthenticatedUser
+    ) {
+        return {
+            message: "Detail materi pembelajaran",
+            goalId,
+            levelId,
+            materialId,
+            requestedBy: user.id
+        }
+    }
+
 }
