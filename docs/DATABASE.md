@@ -12,7 +12,7 @@
 Contoh:
 
 ``` env
-DATABASE_URL=postgresql://postgres:password@localhost:5432/aixel_db
+DATABASE_URL=postgresql://postgres:password@127.0.0.1:5433/aixel_db
 ```
 
 DataSource CLI berada di:

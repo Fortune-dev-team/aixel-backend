@@ -1,16 +1,940 @@
+// Generated from erd aixel.md. Review nullable/default policy before production.
+// Prisma 7: datasource URL is configured in prisma.config.ts.
 generator client {
-	provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-	provider = "postgresql"
-	url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
-model User {
-	id        String   @id @default(cuid())
-	email     String   @unique
-	password  String
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
+model Users {
+  id String @db.Uuid @id @default(uuid())
+  email String @unique
+  password_hash String?
+  full_name String?
+  system_role String?
+  status String?
+  email_verified_at DateTime? @db.Timestamptz(6)
+  last_login_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  deleted_at DateTime? @db.Timestamptz(6)
+  UserProfiles_user_id_item UserProfiles? @relation("Users_user_id")
+  RefreshTokens_user_id_items RefreshTokens[] @relation("Users_user_id")
+  AuthTokens_user_id_items AuthTokens[] @relation("Users_user_id")
+  MaterialProgress_user_id_items MaterialProgress[] @relation("Users_user_id")
+  MaterialReports_reporter_id_items MaterialReports[] @relation("Users_reporter_id")
+  PretestSessions_user_id_items PretestSessions[] @relation("Users_user_id")
+  Goals_user_id_items Goals[] @relation("Users_user_id")
+  LevelAttempts_user_id_items LevelAttempts[] @relation("Users_user_id")
+  MentorRequests_mentee_id_items MentorRequests[] @relation("Users_mentee_id")
+  MentorRequests_mentor_id_items MentorRequests[] @relation("Users_mentor_id")
+  Interviews_mentee_id_items Interviews[] @relation("Users_mentee_id")
+  Interviews_mentor_id_items Interviews[] @relation("Users_mentor_id")
+  InterviewSlots_proposed_by_items InterviewSlots[] @relation("Users_proposed_by")
+  InterviewEvaluations_evaluator_id_items InterviewEvaluations[] @relation("Users_evaluator_id")
+  ConflictOfInterests_user_id_items ConflictOfInterests[] @relation("Users_user_id")
+  ConflictOfInterests_related_user_id_items ConflictOfInterests[] @relation("Users_related_user_id")
+  MemberAttributes_user_id_items MemberAttributes[] @relation("Users_user_id")
+  MemberAttributes_approved_by_mentor_id_items MemberAttributes[] @relation("Users_approved_by_mentor_id")
+  MemberAttributes_appointed_by_admin_id_items MemberAttributes[] @relation("Users_appointed_by_admin_id")
+  AttributeRefreshRequests_user_id_items AttributeRefreshRequests[] @relation("Users_user_id")
+  Certificates_user_id_items Certificates[] @relation("Users_user_id")
+  Notifications_user_id_items Notifications[] @relation("Users_user_id")
+  AdminInterventions_admin_id_items AdminInterventions[] @relation("Users_admin_id")
+  AuditLogs_actor_id_items AuditLogs[] @relation("Users_actor_id")
+  ExportJobs_requested_by_items ExportJobs[] @relation("Users_requested_by")
+  @@map("users")
+}
+
+model UserProfiles {
+  user_id String @db.Uuid @id
+  avatar_url String?
+  job_title String?
+  division String?
+  bio String?
+  phone String?
+  timezone String?
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  Users_user_id Users @relation("Users_user_id", fields: [user_id], references: [id], onDelete: Cascade)
+  @@map("user_profiles")
+}
+
+model RefreshTokens {
+  id String @db.Uuid @id @default(uuid())
+  user_id String? @db.Uuid
+  family_id String? @db.Uuid
+  token_hash String @unique
+  user_agent String?
+  ip_address String?
+  expires_at DateTime? @db.Timestamptz(6)
+  revoked_at DateTime? @db.Timestamptz(6)
+  replaced_by_id String? @db.Uuid
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  @@index([user_id])
+  @@map("refresh_tokens")
+}
+
+model AuthTokens {
+  id String @db.Uuid @id @default(uuid())
+  user_id String? @db.Uuid
+  type String?
+  token_hash String @unique
+  expires_at DateTime? @db.Timestamptz(6)
+  used_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  @@index([user_id])
+  @@map("auth_tokens")
+}
+
+model AttributeCategories {
+  id String @db.Uuid @id @default(uuid())
+  name String?
+  slug String @unique
+  description String?
+  sort_order Int @default(0)
+  Attributes_category_id_items Attributes[] @relation("AttributeCategories_category_id")
+  @@map("attribute_categories")
+}
+
+model Attributes {
+  id String @db.Uuid @id @default(uuid())
+  category_id String? @db.Uuid
+  code String @unique
+  name String?
+  description String?
+  is_active Boolean? @default(true)
+  validity_months Int?
+  created_by String? @db.Uuid
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  archived_at DateTime? @db.Timestamptz(6)
+  AttributeCategories_category_id AttributeCategories? @relation("AttributeCategories_category_id", fields: [category_id], references: [id], onDelete: SetNull)
+  AttributeLevels_attribute_id_items AttributeLevels[] @relation("Attributes_attribute_id")
+  KnowledgeSources_attribute_id_items KnowledgeSources[] @relation("Attributes_attribute_id")
+  KnowledgeChunks_attribute_id_items KnowledgeChunks[] @relation("Attributes_attribute_id")
+  Rubrics_attribute_id_items Rubrics[] @relation("Attributes_attribute_id")
+  Questions_attribute_id_items Questions[] @relation("Attributes_attribute_id")
+  PretestResults_attribute_id_items PretestResults[] @relation("Attributes_attribute_id")
+  Goals_attribute_id_items Goals[] @relation("Attributes_attribute_id")
+  AiGenerationRuns_attribute_id_items AiGenerationRuns[] @relation("Attributes_attribute_id")
+  MentorRequests_attribute_id_items MentorRequests[] @relation("Attributes_attribute_id")
+  Interviews_attribute_id_items Interviews[] @relation("Attributes_attribute_id")
+  MemberAttributes_attribute_id_items MemberAttributes[] @relation("Attributes_attribute_id")
+  Certificates_attribute_id_items Certificates[] @relation("Attributes_attribute_id")
+  @@index([category_id])
+  @@map("attributes")
+}
+
+model AttributeLevels {
+  id String @db.Uuid @id @default(uuid())
+  attribute_id String? @db.Uuid
+  level_number Int?
+  level_type String?
+  title String?
+  description String?
+  miller_stage String?
+  pass_score Decimal?
+  max_retry Int?
+  question_count Int?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  LevelIndicators_level_id_items LevelIndicators[] @relation("AttributeLevels_level_id")
+  KnowledgeSources_level_id_items KnowledgeSources[] @relation("AttributeLevels_level_id")
+  KnowledgeChunks_level_id_items KnowledgeChunks[] @relation("AttributeLevels_level_id")
+  CourseMaterials_level_id_items CourseMaterials[] @relation("AttributeLevels_level_id")
+  Rubrics_level_id_items Rubrics[] @relation("AttributeLevels_level_id")
+  Questions_level_id_items Questions[] @relation("AttributeLevels_level_id")
+  GoalLevelProgress_level_id_items GoalLevelProgress[] @relation("AttributeLevels_level_id")
+  LevelAttempts_level_id_items LevelAttempts[] @relation("AttributeLevels_level_id")
+  AiGenerationRuns_level_id_items AiGenerationRuns[] @relation("AttributeLevels_level_id")
+  @@index([attribute_id])
+  @@map("attribute_levels")
+}
+
+model LevelIndicators {
+  id String @db.Uuid @id @default(uuid())
+  level_id String? @db.Uuid
+  description String?
+  sort_order Int @default(0)
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  @@index([level_id])
+  @@map("level_indicators")
+}
+
+model KnowledgeSources {
+  id String @db.Uuid @id @default(uuid())
+  attribute_id String? @db.Uuid
+  level_id String? @db.Uuid
+  title String?
+  source_type String?
+  origin String?
+  url String?
+  language String?
+  file_key String?
+  file_mime String?
+  status String?
+  ingestion_error String?
+  link_status String?
+  last_link_checked_at DateTime? @db.Timestamptz(6)
+  verified_at DateTime? @db.Timestamptz(6)
+  verified_by String? @db.Uuid
+  uploaded_by String? @db.Uuid
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  deleted_at DateTime? @db.Timestamptz(6)
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  KnowledgeChunks_source_id_items KnowledgeChunks[] @relation("KnowledgeSources_source_id")
+  CourseMaterialSources_source_id_items CourseMaterialSources[] @relation("KnowledgeSources_source_id")
+  MaterialReports_source_id_items MaterialReports[] @relation("KnowledgeSources_source_id")
+  @@index([attribute_id])
+  @@index([level_id])
+  @@map("knowledge_sources")
+}
+
+model KnowledgeChunks {
+  id String @db.Uuid @id @default(uuid())
+  source_id String? @db.Uuid
+  attribute_id String? @db.Uuid
+  level_id String? @db.Uuid
+  chunk_index Int? @default(0)
+  content String?
+  token_count Int?
+  embedding Unsupported("vector")?
+  embedding_model String?
+  metadata Json?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  KnowledgeSources_source_id KnowledgeSources? @relation("KnowledgeSources_source_id", fields: [source_id], references: [id], onDelete: SetNull)
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  CourseMaterialSources_chunk_id_items CourseMaterialSources[] @relation("KnowledgeChunks_chunk_id")
+  QuestionChunks_chunk_id_items QuestionChunks[] @relation("KnowledgeChunks_chunk_id")
+  AiGenerationRunChunks_chunk_id_items AiGenerationRunChunks[] @relation("KnowledgeChunks_chunk_id")
+  @@index([source_id])
+  @@index([attribute_id])
+  @@index([level_id])
+  @@map("knowledge_chunks")
+}
+
+model CourseMaterials {
+  id String @db.Uuid @id @default(uuid())
+  level_id String? @db.Uuid
+  title String?
+  summary_md String?
+  status String?
+  origin String?
+  version Int? @default(1)
+  generation_run_id String? @db.Uuid
+  approved_by String? @db.Uuid
+  approved_at DateTime? @db.Timestamptz(6)
+  created_by String? @db.Uuid
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  AiGenerationRuns_generation_run_id AiGenerationRuns? @relation("AiGenerationRuns_generation_run_id", fields: [generation_run_id], references: [id], onDelete: SetNull)
+  CourseMaterialSources_material_id_items CourseMaterialSources[] @relation("CourseMaterials_material_id")
+  MaterialProgress_material_id_items MaterialProgress[] @relation("CourseMaterials_material_id")
+  MaterialReports_material_id_items MaterialReports[] @relation("CourseMaterials_material_id")
+  @@index([level_id])
+  @@index([generation_run_id])
+  @@map("course_materials")
+}
+
+model CourseMaterialSources {
+  id String @db.Uuid @id @default(uuid())
+  material_id String? @db.Uuid
+  source_id String? @db.Uuid
+  chunk_id String? @db.Uuid
+  citation_note String?
+  CourseMaterials_material_id CourseMaterials? @relation("CourseMaterials_material_id", fields: [material_id], references: [id], onDelete: SetNull)
+  KnowledgeSources_source_id KnowledgeSources? @relation("KnowledgeSources_source_id", fields: [source_id], references: [id], onDelete: SetNull)
+  KnowledgeChunks_chunk_id KnowledgeChunks? @relation("KnowledgeChunks_chunk_id", fields: [chunk_id], references: [id], onDelete: SetNull)
+  @@index([material_id])
+  @@index([source_id])
+  @@index([chunk_id])
+  @@map("course_material_sources")
+}
+
+model MaterialProgress {
+  id String @db.Uuid @id @default(uuid())
+  user_id String? @db.Uuid
+  goal_id String? @db.Uuid
+  material_id String? @db.Uuid
+  completed_at DateTime? @db.Timestamptz(6)
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  Goals_goal_id Goals? @relation("Goals_goal_id", fields: [goal_id], references: [id], onDelete: SetNull)
+  CourseMaterials_material_id CourseMaterials? @relation("CourseMaterials_material_id", fields: [material_id], references: [id], onDelete: SetNull)
+  @@index([user_id])
+  @@index([goal_id])
+  @@index([material_id])
+  @@map("material_progress")
+}
+
+model MaterialReports {
+  id String @db.Uuid @id @default(uuid())
+  reporter_id String? @db.Uuid
+  material_id String? @db.Uuid
+  source_id String? @db.Uuid
+  reason String?
+  status String?
+  resolved_by String? @db.Uuid
+  resolution_note String?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  resolved_at DateTime? @db.Timestamptz(6)
+  Users_reporter_id Users? @relation("Users_reporter_id", fields: [reporter_id], references: [id], onDelete: SetNull)
+  CourseMaterials_material_id CourseMaterials? @relation("CourseMaterials_material_id", fields: [material_id], references: [id], onDelete: SetNull)
+  KnowledgeSources_source_id KnowledgeSources? @relation("KnowledgeSources_source_id", fields: [source_id], references: [id], onDelete: SetNull)
+  @@index([reporter_id])
+  @@index([material_id])
+  @@index([source_id])
+  @@map("material_reports")
+}
+
+model Rubrics {
+  id String @db.Uuid @id @default(uuid())
+  attribute_id String? @db.Uuid
+  level_id String? @db.Uuid
+  rubric_type String?
+  name String?
+  version Int? @default(1)
+  status String?
+  origin String?
+  generation_run_id String? @db.Uuid
+  scale_max Int?
+  approved_by String? @db.Uuid
+  approved_at DateTime? @db.Timestamptz(6)
+  created_by String? @db.Uuid
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  AiGenerationRuns_generation_run_id AiGenerationRuns? @relation("AiGenerationRuns_generation_run_id", fields: [generation_run_id], references: [id], onDelete: SetNull)
+  RubricCriteria_rubric_id_items RubricCriteria[] @relation("Rubrics_rubric_id")
+  Questions_rubric_id_items Questions[] @relation("Rubrics_rubric_id")
+  LevelAttempts_rubric_id_items LevelAttempts[] @relation("Rubrics_rubric_id")
+  AiGradingResults_rubric_id_items AiGradingResults[] @relation("Rubrics_rubric_id")
+  AiConsistencyChecks_rubric_id_items AiConsistencyChecks[] @relation("Rubrics_rubric_id")
+  InterviewEvaluations_rubric_id_items InterviewEvaluations[] @relation("Rubrics_rubric_id")
+  @@index([attribute_id])
+  @@index([level_id])
+  @@index([generation_run_id])
+  @@map("rubrics")
+}
+
+model RubricCriteria {
+  id String @db.Uuid @id @default(uuid())
+  rubric_id String? @db.Uuid
+  name String?
+  description String?
+  weight Decimal?
+  sort_order Int @default(0)
+  Rubrics_rubric_id Rubrics? @relation("Rubrics_rubric_id", fields: [rubric_id], references: [id], onDelete: SetNull)
+  RubricDescriptors_criterion_id_items RubricDescriptors[] @relation("RubricCriteria_criterion_id")
+  AiGradingCriterionScores_criterion_id_items AiGradingCriterionScores[] @relation("RubricCriteria_criterion_id")
+  InterviewEvaluationScores_criterion_id_items InterviewEvaluationScores[] @relation("RubricCriteria_criterion_id")
+  @@index([rubric_id])
+  @@map("rubric_criteria")
+}
+
+model RubricDescriptors {
+  id String @db.Uuid @id @default(uuid())
+  criterion_id String? @db.Uuid
+  score Int?
+  label String?
+  descriptor String?
+  RubricCriteria_criterion_id RubricCriteria? @relation("RubricCriteria_criterion_id", fields: [criterion_id], references: [id], onDelete: SetNull)
+  AiGradingCriterionScores_matched_descriptor_id_items AiGradingCriterionScores[] @relation("RubricDescriptors_matched_descriptor_id")
+  @@index([criterion_id])
+  @@map("rubric_descriptors")
+}
+
+model SystemRules {
+  key String @id
+  value Json?
+  value_type String?
+  description String?
+  updated_by String? @db.Uuid
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  @@map("system_rules")
+}
+
+model Questions {
+  id String @db.Uuid @id @default(uuid())
+  attribute_id String? @db.Uuid
+  level_id String? @db.Uuid
+  purpose String?
+  question_type String?
+  stem String?
+  context_md String?
+  difficulty String?
+  rubric_id String? @db.Uuid
+  origin String?
+  status String?
+  generation_run_id String? @db.Uuid
+  created_by String? @db.Uuid
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  Rubrics_rubric_id Rubrics? @relation("Rubrics_rubric_id", fields: [rubric_id], references: [id], onDelete: SetNull)
+  AiGenerationRuns_generation_run_id AiGenerationRuns? @relation("AiGenerationRuns_generation_run_id", fields: [generation_run_id], references: [id], onDelete: SetNull)
+  QuestionOptions_question_id_items QuestionOptions[] @relation("Questions_question_id")
+  QuestionChunks_question_id_items QuestionChunks[] @relation("Questions_question_id")
+  PretestAnswers_question_id_items PretestAnswers[] @relation("Questions_question_id")
+  AttemptAnswers_question_id_items AttemptAnswers[] @relation("Questions_question_id")
+  @@index([attribute_id])
+  @@index([level_id])
+  @@index([rubric_id])
+  @@index([generation_run_id])
+  @@map("questions")
+}
+
+model QuestionOptions {
+  id String @db.Uuid @id @default(uuid())
+  question_id String? @db.Uuid
+  label String?
+  option_text String?
+  is_correct Boolean?
+  score_value Decimal?
+  rationale String?
+  sort_order Int @default(0)
+  Questions_question_id Questions? @relation("Questions_question_id", fields: [question_id], references: [id], onDelete: SetNull)
+  PretestAnswers_option_id_items PretestAnswers[] @relation("QuestionOptions_option_id")
+  AttemptAnswers_selected_option_id_items AttemptAnswers[] @relation("QuestionOptions_selected_option_id")
+  @@index([question_id])
+  @@map("question_options")
+}
+
+model QuestionChunks {
+  id String @db.Uuid @id @default(uuid())
+  question_id String? @db.Uuid
+  chunk_id String? @db.Uuid
+  Questions_question_id Questions? @relation("Questions_question_id", fields: [question_id], references: [id], onDelete: SetNull)
+  KnowledgeChunks_chunk_id KnowledgeChunks? @relation("KnowledgeChunks_chunk_id", fields: [chunk_id], references: [id], onDelete: SetNull)
+  @@index([question_id])
+  @@index([chunk_id])
+  @@map("question_chunks")
+}
+
+model PretestSessions {
+  id String @db.Uuid @id @default(uuid())
+  user_id String? @db.Uuid
+  status String?
+  started_at DateTime? @db.Timestamptz(6)
+  submitted_at DateTime? @db.Timestamptz(6)
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  PretestAnswers_session_id_items PretestAnswers[] @relation("PretestSessions_session_id")
+  PretestResults_session_id_items PretestResults[] @relation("PretestSessions_session_id")
+  @@index([user_id])
+  @@map("pretest_sessions")
+}
+
+model PretestAnswers {
+  id String @db.Uuid @id @default(uuid())
+  session_id String? @db.Uuid
+  question_id String? @db.Uuid
+  option_id String? @db.Uuid
+  likert_value Int?
+  answer_text String?
+  score Decimal?
+  answered_at DateTime? @db.Timestamptz(6)
+  PretestSessions_session_id PretestSessions? @relation("PretestSessions_session_id", fields: [session_id], references: [id], onDelete: SetNull)
+  Questions_question_id Questions? @relation("Questions_question_id", fields: [question_id], references: [id], onDelete: SetNull)
+  QuestionOptions_option_id QuestionOptions? @relation("QuestionOptions_option_id", fields: [option_id], references: [id], onDelete: SetNull)
+  @@index([session_id])
+  @@index([question_id])
+  @@index([option_id])
+  @@map("pretest_answers")
+}
+
+model PretestResults {
+  id String @db.Uuid @id @default(uuid())
+  session_id String? @db.Uuid
+  attribute_id String? @db.Uuid
+  self_score Decimal?
+  sjt_score Decimal?
+  gap_score Decimal?
+  strength_label String?
+  recommendation_rank Int?
+  PretestSessions_session_id PretestSessions? @relation("PretestSessions_session_id", fields: [session_id], references: [id], onDelete: SetNull)
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  @@index([session_id])
+  @@index([attribute_id])
+  @@map("pretest_results")
+}
+
+model Goals {
+  id String @db.Uuid @id @default(uuid())
+  user_id String? @db.Uuid
+  attribute_id String? @db.Uuid
+  status String?
+  started_at DateTime? @db.Timestamptz(6)
+  completed_at DateTime? @db.Timestamptz(6)
+  abandoned_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  MaterialProgress_goal_id_items MaterialProgress[] @relation("Goals_goal_id")
+  GoalLevelProgress_goal_id_items GoalLevelProgress[] @relation("Goals_goal_id")
+  MentorRequests_goal_id_items MentorRequests[] @relation("Goals_goal_id")
+  Interviews_goal_id_items Interviews[] @relation("Goals_goal_id")
+  MemberAttributes_goal_id_items MemberAttributes[] @relation("Goals_goal_id")
+  @@index([user_id])
+  @@index([attribute_id])
+  @@map("goals")
+}
+
+model GoalLevelProgress {
+  id String @db.Uuid @id @default(uuid())
+  goal_id String? @db.Uuid
+  level_id String? @db.Uuid
+  status String?
+  interview_phase String?
+  attempts_used Int? @default(0)
+  interview_rounds_used Int? @default(0)
+  best_score Decimal?
+  cooldown_until DateTime? @db.Timestamptz(6)
+  unlocked_at DateTime? @db.Timestamptz(6)
+  passed_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  Goals_goal_id Goals? @relation("Goals_goal_id", fields: [goal_id], references: [id], onDelete: SetNull)
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  LevelAttempts_goal_level_progress_id_items LevelAttempts[] @relation("GoalLevelProgress_goal_level_progress_id")
+  MentorRequests_goal_level_progress_id_items MentorRequests[] @relation("GoalLevelProgress_goal_level_progress_id")
+  @@index([goal_id])
+  @@index([level_id])
+  @@map("goal_level_progress")
+}
+
+model LevelAttempts {
+  id String @db.Uuid @id @default(uuid())
+  goal_level_progress_id String? @db.Uuid
+  user_id String? @db.Uuid
+  level_id String? @db.Uuid
+  attempt_number Int?
+  status String?
+  rubric_id String? @db.Uuid
+  total_score Decimal?
+  max_score Decimal?
+  score_percent Decimal?
+  passed Boolean?
+  is_uncertain Boolean?
+  feedback_summary String?
+  review_recommendations Json?
+  generation_run_id String? @db.Uuid
+  started_at DateTime? @db.Timestamptz(6)
+  submitted_at DateTime? @db.Timestamptz(6)
+  graded_at DateTime? @db.Timestamptz(6)
+  GoalLevelProgress_goal_level_progress_id GoalLevelProgress? @relation("GoalLevelProgress_goal_level_progress_id", fields: [goal_level_progress_id], references: [id], onDelete: SetNull)
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  Rubrics_rubric_id Rubrics? @relation("Rubrics_rubric_id", fields: [rubric_id], references: [id], onDelete: SetNull)
+  AiGenerationRuns_generation_run_id AiGenerationRuns? @relation("AiGenerationRuns_generation_run_id", fields: [generation_run_id], references: [id], onDelete: SetNull)
+  AttemptAnswers_attempt_id_items AttemptAnswers[] @relation("LevelAttempts_attempt_id")
+  @@index([goal_level_progress_id])
+  @@index([user_id])
+  @@index([level_id])
+  @@index([rubric_id])
+  @@index([generation_run_id])
+  @@map("level_attempts")
+}
+
+model AttemptAnswers {
+  id String @db.Uuid @id @default(uuid())
+  attempt_id String? @db.Uuid
+  question_id String? @db.Uuid
+  selected_option_id String? @db.Uuid
+  answer_text String?
+  auto_score Decimal?
+  ai_score Decimal?
+  final_score Decimal?
+  is_correct Boolean?
+  feedback String?
+  answered_at DateTime? @db.Timestamptz(6)
+  LevelAttempts_attempt_id LevelAttempts? @relation("LevelAttempts_attempt_id", fields: [attempt_id], references: [id], onDelete: SetNull)
+  Questions_question_id Questions? @relation("Questions_question_id", fields: [question_id], references: [id], onDelete: SetNull)
+  QuestionOptions_selected_option_id QuestionOptions? @relation("QuestionOptions_selected_option_id", fields: [selected_option_id], references: [id], onDelete: SetNull)
+  AiGradingResults_attempt_answer_id_items AiGradingResults[] @relation("AttemptAnswers_attempt_answer_id")
+  AiConsistencyChecks_attempt_answer_id_items AiConsistencyChecks[] @relation("AttemptAnswers_attempt_answer_id")
+  @@index([attempt_id])
+  @@index([question_id])
+  @@index([selected_option_id])
+  @@map("attempt_answers")
+}
+
+model AiGradingResults {
+  id String @db.Uuid @id @default(uuid())
+  attempt_answer_id String? @db.Uuid
+  rubric_id String? @db.Uuid
+  run_index Int?
+  ai_provider String?
+  model String?
+  prompt_version String?
+  total_score Decimal?
+  confidence Decimal?
+  is_uncertain Boolean?
+  reasoning String?
+  raw_response Json?
+  latency_ms Int?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  AttemptAnswers_attempt_answer_id AttemptAnswers? @relation("AttemptAnswers_attempt_answer_id", fields: [attempt_answer_id], references: [id], onDelete: SetNull)
+  Rubrics_rubric_id Rubrics? @relation("Rubrics_rubric_id", fields: [rubric_id], references: [id], onDelete: SetNull)
+  AiGradingCriterionScores_grading_result_id_items AiGradingCriterionScores[] @relation("AiGradingResults_grading_result_id")
+  @@index([attempt_answer_id])
+  @@index([rubric_id])
+  @@map("ai_grading_results")
+}
+
+model AiGradingCriterionScores {
+  id String @db.Uuid @id @default(uuid())
+  grading_result_id String? @db.Uuid
+  criterion_id String? @db.Uuid
+  score Int?
+  matched_descriptor_id String? @db.Uuid
+  evidence String?
+  AiGradingResults_grading_result_id AiGradingResults? @relation("AiGradingResults_grading_result_id", fields: [grading_result_id], references: [id], onDelete: SetNull)
+  RubricCriteria_criterion_id RubricCriteria? @relation("RubricCriteria_criterion_id", fields: [criterion_id], references: [id], onDelete: SetNull)
+  RubricDescriptors_matched_descriptor_id RubricDescriptors? @relation("RubricDescriptors_matched_descriptor_id", fields: [matched_descriptor_id], references: [id], onDelete: SetNull)
+  @@index([grading_result_id])
+  @@index([criterion_id])
+  @@index([matched_descriptor_id])
+  @@map("ai_grading_criterion_scores")
+}
+
+model AiConsistencyChecks {
+  id String @db.Uuid @id @default(uuid())
+  attempt_answer_id String? @db.Uuid
+  rubric_id String? @db.Uuid
+  runs Int? @default(0)
+  scores Json?
+  std_dev Decimal?
+  is_consistent Boolean?
+  triggered_by String? @db.Uuid
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  AttemptAnswers_attempt_answer_id AttemptAnswers? @relation("AttemptAnswers_attempt_answer_id", fields: [attempt_answer_id], references: [id], onDelete: SetNull)
+  Rubrics_rubric_id Rubrics? @relation("Rubrics_rubric_id", fields: [rubric_id], references: [id], onDelete: SetNull)
+  @@index([attempt_answer_id])
+  @@index([rubric_id])
+  @@map("ai_consistency_checks")
+}
+
+model AiGenerationRuns {
+  id String @db.Uuid @id @default(uuid())
+  purpose String?
+  requested_by String? @db.Uuid
+  attribute_id String? @db.Uuid
+  level_id String? @db.Uuid
+  provider String?
+  model String?
+  prompt_version String?
+  prompt_hash String?
+  input_tokens Int?
+  output_tokens Int?
+  latency_ms Int?
+  status String?
+  error_message String?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  AttributeLevels_level_id AttributeLevels? @relation("AttributeLevels_level_id", fields: [level_id], references: [id], onDelete: SetNull)
+  CourseMaterials_generation_run_id_items CourseMaterials[] @relation("AiGenerationRuns_generation_run_id")
+  Rubrics_generation_run_id_items Rubrics[] @relation("AiGenerationRuns_generation_run_id")
+  Questions_generation_run_id_items Questions[] @relation("AiGenerationRuns_generation_run_id")
+  LevelAttempts_generation_run_id_items LevelAttempts[] @relation("AiGenerationRuns_generation_run_id")
+  AiGenerationRunChunks_run_id_items AiGenerationRunChunks[] @relation("AiGenerationRuns_run_id")
+  @@index([attribute_id])
+  @@index([level_id])
+  @@map("ai_generation_runs")
+}
+
+model AiGenerationRunChunks {
+  id String @db.Uuid @id @default(uuid())
+  run_id String? @db.Uuid
+  chunk_id String? @db.Uuid
+  similarity Decimal?
+  rank Int? @default(0)
+  AiGenerationRuns_run_id AiGenerationRuns? @relation("AiGenerationRuns_run_id", fields: [run_id], references: [id], onDelete: SetNull)
+  KnowledgeChunks_chunk_id KnowledgeChunks? @relation("KnowledgeChunks_chunk_id", fields: [chunk_id], references: [id], onDelete: SetNull)
+  @@index([run_id])
+  @@index([chunk_id])
+  @@map("ai_generation_run_chunks")
+}
+
+model MentorRequests {
+  id String @db.Uuid @id @default(uuid())
+  goal_id String? @db.Uuid
+  goal_level_progress_id String? @db.Uuid
+  attribute_id String? @db.Uuid
+  mentee_id String? @db.Uuid
+  mentor_id String? @db.Uuid
+  round_number Int? @default(0)
+  status String?
+  message String?
+  rejection_reason String?
+  expires_at DateTime? @db.Timestamptz(6)
+  responded_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Goals_goal_id Goals? @relation("Goals_goal_id", fields: [goal_id], references: [id], onDelete: SetNull)
+  GoalLevelProgress_goal_level_progress_id GoalLevelProgress? @relation("GoalLevelProgress_goal_level_progress_id", fields: [goal_level_progress_id], references: [id], onDelete: SetNull)
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  Users_mentee_id Users? @relation("Users_mentee_id", fields: [mentee_id], references: [id], onDelete: SetNull)
+  Users_mentor_id Users? @relation("Users_mentor_id", fields: [mentor_id], references: [id], onDelete: SetNull)
+  Interviews_mentor_request_id_items Interviews[] @relation("MentorRequests_mentor_request_id")
+  @@index([goal_id])
+  @@index([goal_level_progress_id])
+  @@index([attribute_id])
+  @@index([mentee_id])
+  @@index([mentor_id])
+  @@map("mentor_requests")
+}
+
+model Interviews {
+  id String @db.Uuid @id @default(uuid())
+  mentor_request_id String? @db.Uuid
+  goal_id String? @db.Uuid
+  attribute_id String? @db.Uuid
+  mentee_id String? @db.Uuid
+  mentor_id String? @db.Uuid
+  round_number Int? @default(0)
+  status String?
+  scheduled_start DateTime? @db.Timestamptz(6)
+  scheduled_end DateTime? @db.Timestamptz(6)
+  location String?
+  completed_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  MentorRequests_mentor_request_id MentorRequests? @relation("MentorRequests_mentor_request_id", fields: [mentor_request_id], references: [id], onDelete: SetNull)
+  Goals_goal_id Goals? @relation("Goals_goal_id", fields: [goal_id], references: [id], onDelete: SetNull)
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  Users_mentee_id Users? @relation("Users_mentee_id", fields: [mentee_id], references: [id], onDelete: SetNull)
+  Users_mentor_id Users? @relation("Users_mentor_id", fields: [mentor_id], references: [id], onDelete: SetNull)
+  InterviewSlots_interview_id_items InterviewSlots[] @relation("Interviews_interview_id")
+  InterviewEvaluations_interview_id_item InterviewEvaluations? @relation("Interviews_interview_id")
+  @@index([mentor_request_id])
+  @@index([goal_id])
+  @@index([attribute_id])
+  @@index([mentee_id])
+  @@index([mentor_id])
+  @@map("interviews")
+}
+
+model InterviewSlots {
+  id String @db.Uuid @id @default(uuid())
+  interview_id String? @db.Uuid @unique
+  proposed_by String? @db.Uuid
+  proposer_role String?
+  start_at DateTime? @db.Timestamptz(6)
+  end_at DateTime? @db.Timestamptz(6)
+  status String?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Interviews_interview_id Interviews? @relation("Interviews_interview_id", fields: [interview_id], references: [id], onDelete: SetNull)
+  Users_proposed_by Users? @relation("Users_proposed_by", fields: [proposed_by], references: [id], onDelete: SetNull)
+  @@index([interview_id])
+  @@index([proposed_by])
+  @@map("interview_slots")
+}
+
+model InterviewEvaluations {
+  id String @db.Uuid @id @default(uuid())
+  interview_id String? @db.Uuid @unique
+  evaluator_id String? @db.Uuid
+  rubric_id String? @db.Uuid
+  decision String?
+  total_score Decimal?
+  notes String?
+  improvement_notes String?
+  cooldown_until DateTime? @db.Timestamptz(6)
+  submitted_at DateTime? @db.Timestamptz(6)
+  Interviews_interview_id Interviews? @relation("Interviews_interview_id", fields: [interview_id], references: [id], onDelete: SetNull)
+  Users_evaluator_id Users? @relation("Users_evaluator_id", fields: [evaluator_id], references: [id], onDelete: SetNull)
+  Rubrics_rubric_id Rubrics? @relation("Rubrics_rubric_id", fields: [rubric_id], references: [id], onDelete: SetNull)
+  InterviewEvaluationScores_evaluation_id_items InterviewEvaluationScores[] @relation("InterviewEvaluations_evaluation_id")
+  MemberAttributes_interview_evaluation_id_items MemberAttributes[] @relation("InterviewEvaluations_interview_evaluation_id")
+  @@index([interview_id])
+  @@index([evaluator_id])
+  @@index([rubric_id])
+  @@map("interview_evaluations")
+}
+
+model InterviewEvaluationScores {
+  id String @db.Uuid @id @default(uuid())
+  evaluation_id String? @db.Uuid
+  criterion_id String? @db.Uuid
+  score Int?
+  note String?
+  InterviewEvaluations_evaluation_id InterviewEvaluations? @relation("InterviewEvaluations_evaluation_id", fields: [evaluation_id], references: [id], onDelete: SetNull)
+  RubricCriteria_criterion_id RubricCriteria? @relation("RubricCriteria_criterion_id", fields: [criterion_id], references: [id], onDelete: SetNull)
+  @@index([evaluation_id])
+  @@index([criterion_id])
+  @@map("interview_evaluation_scores")
+}
+
+model ConflictOfInterests {
+  id String @db.Uuid @id @default(uuid())
+  user_id String? @db.Uuid
+  related_user_id String? @db.Uuid
+  reason String?
+  created_by String? @db.Uuid
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  ended_at DateTime? @db.Timestamptz(6)
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  Users_related_user_id Users? @relation("Users_related_user_id", fields: [related_user_id], references: [id], onDelete: SetNull)
+  @@index([user_id])
+  @@index([related_user_id])
+  @@map("conflict_of_interests")
+}
+
+model MemberAttributes {
+  id String @db.Uuid @id @default(uuid())
+  user_id String? @db.Uuid
+  attribute_id String? @db.Uuid
+  origin String?
+  goal_id String? @db.Uuid
+  interview_evaluation_id String? @db.Uuid
+  approved_by_mentor_id String? @db.Uuid
+  appointed_by_admin_id String? @db.Uuid
+  appointment_reason String?
+  achieved_at DateTime? @db.Timestamptz(6)
+  valid_from DateTime? @db.Timestamptz(6)
+  expires_at DateTime? @db.Timestamptz(6)
+  status String?
+  is_accepting_mentees Boolean?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  Goals_goal_id Goals? @relation("Goals_goal_id", fields: [goal_id], references: [id], onDelete: SetNull)
+  InterviewEvaluations_interview_evaluation_id InterviewEvaluations? @relation("InterviewEvaluations_interview_evaluation_id", fields: [interview_evaluation_id], references: [id], onDelete: SetNull)
+  Users_approved_by_mentor_id Users? @relation("Users_approved_by_mentor_id", fields: [approved_by_mentor_id], references: [id], onDelete: SetNull)
+  Users_appointed_by_admin_id Users? @relation("Users_appointed_by_admin_id", fields: [appointed_by_admin_id], references: [id], onDelete: SetNull)
+  AttributeRefreshRequests_member_attribute_id_items AttributeRefreshRequests[] @relation("MemberAttributes_member_attribute_id")
+  Certificates_member_attribute_id_items Certificates[] @relation("MemberAttributes_member_attribute_id")
+  @@index([user_id])
+  @@index([attribute_id])
+  @@index([goal_id])
+  @@index([interview_evaluation_id])
+  @@index([approved_by_mentor_id])
+  @@index([appointed_by_admin_id])
+  @@map("member_attributes")
+}
+
+model AttributeRefreshRequests {
+  id String @db.Uuid @id @default(uuid())
+  member_attribute_id String? @db.Uuid
+  user_id String? @db.Uuid
+  status String?
+  project_name String?
+  project_description String?
+  role_in_project String?
+  project_period String?
+  previous_expires_at DateTime? @db.Timestamptz(6)
+  new_expires_at DateTime? @db.Timestamptz(6)
+  reviewed_by String? @db.Uuid
+  review_notes String?
+  submitted_at DateTime? @db.Timestamptz(6)
+  reviewed_at DateTime? @db.Timestamptz(6)
+  MemberAttributes_member_attribute_id MemberAttributes? @relation("MemberAttributes_member_attribute_id", fields: [member_attribute_id], references: [id], onDelete: SetNull)
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  AttributeRefreshEvidences_refresh_request_id_items AttributeRefreshEvidences[] @relation("AttributeRefreshRequests_refresh_request_id")
+  @@index([member_attribute_id])
+  @@index([user_id])
+  @@map("attribute_refresh_requests")
+}
+
+model AttributeRefreshEvidences {
+  id String @db.Uuid @id @default(uuid())
+  refresh_request_id String? @db.Uuid
+  evidence_type String?
+  url String?
+  file_key String?
+  file_name String?
+  file_mime String?
+  file_size Int?
+  AttributeRefreshRequests_refresh_request_id AttributeRefreshRequests? @relation("AttributeRefreshRequests_refresh_request_id", fields: [refresh_request_id], references: [id], onDelete: SetNull)
+  @@index([refresh_request_id])
+  @@map("attribute_refresh_evidences")
+}
+
+model Certificates {
+  id String @db.Uuid @id @default(uuid())
+  member_attribute_id String? @db.Uuid
+  user_id String? @db.Uuid
+  attribute_id String? @db.Uuid
+  certificate_number String @unique
+  verification_code String @unique
+  issued_at DateTime? @db.Timestamptz(6)
+  valid_until DateTime? @db.Timestamptz(6)
+  file_key String?
+  status String?
+  revoked_reason String?
+  MemberAttributes_member_attribute_id MemberAttributes? @relation("MemberAttributes_member_attribute_id", fields: [member_attribute_id], references: [id], onDelete: SetNull)
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  Attributes_attribute_id Attributes? @relation("Attributes_attribute_id", fields: [attribute_id], references: [id], onDelete: SetNull)
+  @@index([member_attribute_id])
+  @@index([user_id])
+  @@index([attribute_id])
+  @@map("certificates")
+}
+
+model Notifications {
+  id String @db.Uuid @id @default(uuid())
+  user_id String? @db.Uuid
+  type String?
+  title String?
+  body String?
+  data Json?
+  read_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Users_user_id Users? @relation("Users_user_id", fields: [user_id], references: [id], onDelete: SetNull)
+  @@index([user_id])
+  @@map("notifications")
+}
+
+model AdminInterventions {
+  id String @db.Uuid @id @default(uuid())
+  type String?
+  admin_id String? @db.Uuid
+  target_type String?
+  target_id String? @db.Uuid
+  reason String?
+  before_data Json?
+  after_data Json?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Users_admin_id Users? @relation("Users_admin_id", fields: [admin_id], references: [id], onDelete: SetNull)
+  @@index([admin_id])
+  @@map("admin_interventions")
+}
+
+model AuditLogs {
+  id String @db.Uuid @id @default(uuid())
+  actor_id String? @db.Uuid
+  action String?
+  entity_type String?
+  entity_id String? @db.Uuid
+  before_data Json?
+  after_data Json?
+  reason String?
+  ip_address String?
+  user_agent String?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  Users_actor_id Users? @relation("Users_actor_id", fields: [actor_id], references: [id], onDelete: SetNull)
+  @@index([actor_id])
+  @@map("audit_logs")
+}
+
+model ExportJobs {
+  id String @db.Uuid @id @default(uuid())
+  requested_by String? @db.Uuid
+  export_type String?
+  filters Json?
+  status String?
+  file_key String?
+  created_at DateTime @db.Timestamptz(6) @default(now())
+  completed_at DateTime? @db.Timestamptz(6)
+  Users_requested_by Users? @relation("Users_requested_by", fields: [requested_by], references: [id], onDelete: SetNull)
+  @@index([requested_by])
+  @@map("export_jobs")
 }

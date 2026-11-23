@@ -11,7 +11,7 @@ PORT=5000
 APP_URL=http://localhost:5000
 FRONTEND_URL=http://localhost:3000
 
-DATABASE_URL=postgresql://postgres:password@localhost:5432/aixel_db
+DATABASE_URL=postgresql://postgres:password@127.0.0.1:5433/aixel_db
 REDIS_URL=redis://localhost:6379
 
 JWT_ACCESS_SECRET=replace_with_random_secret_at_least_32_chars
