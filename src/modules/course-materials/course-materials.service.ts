@@ -20,7 +20,7 @@ export class CourseMaterialsService {
     @InjectRepository(CourseMaterial)
     private readonly courseMaterialRepository: Repository<CourseMaterial>,
   ) {}
-
+  // logic buat endpoint list materi pembelajaran
   async findAll(goalId: string, levelId: string, user: AuthenticatedUser) {
     const goal = await this.goalRepository.findOne({
       where: {
@@ -64,6 +64,7 @@ export class CourseMaterialsService {
     return materials;
   }
 
+  // logic buat endpoint detail materi pembelajaran
   async findOne(
     goalId: string,
     levelId: string,
