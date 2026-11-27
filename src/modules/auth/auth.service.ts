@@ -43,6 +43,7 @@ export class AuthService {
       email,
       passwordHash: await bcrypt.hash(registerDto.password, 12),
       role: UserRole.TEAM,
+      updatedAt: new Date(),
     });
 
     try {
