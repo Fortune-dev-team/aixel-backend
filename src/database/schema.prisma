@@ -18,7 +18,7 @@ model Users {
   email_verified_at DateTime? @db.Timestamptz(6)
   last_login_at DateTime? @db.Timestamptz(6)
   created_at DateTime @db.Timestamptz(6) @default(now())
-  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  updated_at DateTime @default(now()) @db.Timestamptz(6) @updatedAt
   deleted_at DateTime? @db.Timestamptz(6)
   UserProfiles_user_id_item UserProfiles? @relation("Users_user_id")
   RefreshTokens_user_id_items RefreshTokens[] @relation("Users_user_id")
@@ -56,7 +56,7 @@ model UserProfiles {
   bio String?
   phone String?
   timezone String?
-  updated_at DateTime @db.Timestamptz(6) @updatedAt
+  updated_at DateTime @default(now()) @db.Timestamptz(6) @updatedAt
   Users_user_id Users @relation("Users_user_id", fields: [user_id], references: [id], onDelete: Cascade)
   @@map("user_profiles")
 }
