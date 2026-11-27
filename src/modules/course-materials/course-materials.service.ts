@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -119,5 +119,45 @@ export class CourseMaterialsService {
 
     return material;
     
+  }
+
+  async approve(materialId: string, user: AuthenticatedUser) {
+    const material = await this.courseMaterialRepository.findOne({
+      where: { id: materialId },
+    });
+
+    if (!material) {
+      throw new NotFoundException(
+        `Material with ID ${materialId} not found.`,
+      );
+    }
+
+    if (material.status !== 'DRAFT') {
+      throw new BadRequestException(
+        'Only DRAFT materials can be approved'
+      )
+    }
+
+    material.status = 'APPROVED';
+    material.approvedBy = user.id;
+    material.approvedAt = new Date();
+
+    return this.courseMaterialRepository.save(material);
+  }
+
+  async archive(materialId: string) {
+    const material = await this.courseMaterialRepository.findOne({
+      where: { id: materialId},
+    });
+
+    if (!material) {
+      throw new NotFoundException(
+        `Material with ID ${materialId} not found`,
+      );
+    }
+
+    material.status = 'ARCHIVED';
+
+    return this.courseMaterialRepository.save(material);
   }
 }

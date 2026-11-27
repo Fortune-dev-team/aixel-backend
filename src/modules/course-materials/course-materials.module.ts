@@ -7,6 +7,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Goal } from './entities/goal.entity';
 import { AttributeLevel } from './entities/attribute-level.entity';
 import { CourseMaterial } from './entities/course-material.entity';
+import { CourseMaterialsAdminController } from './course-materials-admin.controller';
+
 
 @Module({
   imports: [
@@ -17,7 +19,7 @@ import { CourseMaterial } from './entities/course-material.entity';
       CourseMaterial
     ])
   ],
-  controllers: [CourseMaterialsController],
+  controllers: [CourseMaterialsController, CourseMaterialsAdminController],
   providers: [CourseMaterialsService],
 })
 export class CourseMaterialsModule {}
