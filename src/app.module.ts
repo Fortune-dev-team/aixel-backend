@@ -21,10 +21,11 @@ import { RulesModule } from './modules/rules/rules.module';
 import { RubricsModule } from './modules/rubrics/rubrics.module';
 import { QuestionBankModule } from './modules/question-bank/question-bank.module';
 import { CourseMaterialsModule } from './modules/course-materials/course-materials.module';
-import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
 import { AttributesModule } from './modules/attributes/attributes.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AdminKnowledgeManagementModule } from './modules/admin-knowledge-management/admin-knowledge-management.module';
+import { RenewalsModule } from './modules/renewals/renewals.module';
 
 @Module({
   imports: [
@@ -41,7 +42,7 @@ import { AuthModule } from './modules/auth/auth.module';
     AuthModule,
     UsersModule,
     AttributesModule,
-    KnowledgeBaseModule,
+    AdminKnowledgeManagementModule,
     CourseMaterialsModule,
     QuestionBankModule,
     RubricsModule,
@@ -54,6 +55,7 @@ import { AuthModule } from './modules/auth/auth.module';
     InterviewsModule,
     MemberAttributesModule,
     CertificatesModule,
+    RenewalsModule,
     NotificationsModule,
     DashboardsModule,
     AiMonitoringModule,

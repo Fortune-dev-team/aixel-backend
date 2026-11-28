@@ -132,6 +132,82 @@ global dengan mekanisme pengecualian melalui `@Public()`.
 Kebijakan expiry, rotation, revocation, dan penyimpanan refresh token
 harus ditetapkan serta diuji sebelum production.
 
+### Uji register, login, dan dashboard dengan Postman
+
+Jalankan PostgreSQL lokal dan API terlebih dahulu. Dengan konfigurasi
+Docker Compose repository ini, database tersedia di port `5433`; pastikan
+`.env` menggunakan `DATABASE_URL=postgresql://postgres:password@127.0.0.1:5433/aixel_db`
+dan menetapkan `JWT_ACCESS_SECRET`. Jalankan API dengan
+`npm run start:dev`; base URL default adalah `http://localhost:5000`.
+
+Semua request berikut memakai prefix `/api/v1`.
+
+1. **Register** — buat request `POST
+   http://localhost:5000/api/v1/auth/register`, pilih **Body → raw → JSON**:
+
+   ```json
+   {
+     "fullName": "User Uji",
+     "email": "user.uji@example.com",
+     "password": "Password123!",
+     "confirmPassword": "Password123!"
+   }
+   ```
+
+   Harapkan status `201` berisi `accessToken` dan data user. Register
+   publik sengaja membuat role `tim`, bukan admin.
+
+2. **Login** — buat request `POST
+   http://localhost:5000/api/v1/auth/login` dengan Body JSON:
+
+   ```json
+   {
+     "email": "user.uji@example.com",
+     "password": "Password123!"
+   }
+   ```
+
+   Harapkan status `200`. Salin nilai `accessToken` dari response.
+
+3. **Jadikan akun admin untuk pengujian lokal saja** — dashboard dibatasi
+   untuk role `admin`, sehingga akun hasil register biasa akan menerima
+   `403` sebelum dipromosikan. Pada database lokal milik sendiri, jalankan
+   SQL berikut melalui psql/DBeaver:
+
+   ```sql
+   UPDATE users
+   SET system_role = 'admin'
+   WHERE email = 'user.uji@example.com';
+   ```
+
+   Jika database berjalan dari Compose, perintah PowerShell-nya:
+
+   ```powershell
+   docker compose exec postgres psql -U postgres -d aixel_db -c "UPDATE users SET system_role = 'admin' WHERE email = 'user.uji@example.com';"
+   ```
+
+   Jangan lakukan promosi role lewat endpoint publik atau pada database
+   bersama/production.
+
+4. **Login kembali** dengan request pada langkah 2 dan salin token baru.
+   Strategi JWT membaca role terbaru dari database pada setiap request;
+   token baru tetap disarankan agar alur pengujian jelas.
+
+5. **Akses dashboard** — buat request `GET
+   http://localhost:5000/api/v1/admin/dashboard/overview`. Pada tab
+   **Authorization**, pilih **Bearer Token** dan tempel token baru. Harapkan
+   status `200` beserta ringkasan dashboard.
+
+Endpoint dashboard lain yang tersedia:
+
+- `GET /api/v1/admin/dashboard/member-statistics`
+- `GET /api/v1/admin/dashboard/competency-statistics`
+- `GET /api/v1/admin/dashboard/activity-summary?page=1&limit=20`
+
+`401` biasanya berarti token hilang/tidak valid/kedaluwarsa; `403` berarti
+token valid tetapi role akun bukan `admin`. Jika register mengembalikan
+`409`, gunakan email baru atau hapus akun uji lokal yang sudah terdaftar.
+
 ## 8. CORS
 
 Izinkan origin frontend yang berasal dari `FRONTEND_URL`. Jangan

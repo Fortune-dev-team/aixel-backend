@@ -14,6 +14,9 @@ Contoh:
 ``` env
 DATABASE_URL=postgresql://postgres:password@127.0.0.1:5433/aixel_db
 ```
+Compose membangun PostgreSQL 17 dengan paket pgvector pada port host `5433`.
+Pastikan `DATABASE_URL` menunjuk ke host dan port tersebut; PostgreSQL
+lain di port `5432` mungkin tidak memiliki pgvector.
 
 DataSource CLI berada di:
 
@@ -63,6 +66,19 @@ Aktifkan extension melalui migration:
 ``` sql
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
+
+Server PostgreSQL harus memasang pgvector terlebih dahulu. Untuk database
+lokal, jalankan `npm run infra:up` lalu pastikan extension tersedia:
+
+``` bash
+docker compose exec postgres psql -U postgres -d aixel_db -c "CREATE EXTENSION IF NOT EXISTS vector;"
+```
+
+Jika perintah gagal dengan `extension "vector" is not available`, periksa
+bahwa container dibangun dari `Dockerfile.postgres` dan bahwa
+`DATABASE_URL` terhubung ke container tersebut. Untuk database terkelola,
+gunakan provider/instance yang mendukung pgvector. Migration aplikasi
+tidak dapat memasang file extension yang tidak tersedia pada server.
 
 Contoh kolom vector:
 
