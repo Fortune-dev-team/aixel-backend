@@ -8,6 +8,8 @@ import { Goal } from './entities/goal.entity';
 import { AttributeLevel } from './entities/attribute-level.entity';
 import { CourseMaterial } from './entities/course-material.entity';
 import { CourseMaterialsAdminController } from './course-materials-admin.controller';
+import { MaterialProgress } from './entities/material-progress.entity';
+import { CourseMaterialSource } from './entities/course-material-source.entity';
 
 
 @Module({
@@ -16,7 +18,9 @@ import { CourseMaterialsAdminController } from './course-materials-admin.control
     TypeOrmModule.forFeature([
       Goal,
       AttributeLevel,
-      CourseMaterial
+      CourseMaterial,
+      MaterialProgress,
+      CourseMaterialSource
     ])
   ],
   controllers: [CourseMaterialsController, CourseMaterialsAdminController],

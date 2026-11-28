@@ -5,8 +5,9 @@ import { Repository } from 'typeorm';
 import { Goal } from './entities/goal.entity';
 import { AttributeLevel } from './entities/attribute-level.entity';
 import { CourseMaterial } from './entities/course-material.entity';
-
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
+import { MaterialProgress } from './entities/material-progress.entity';
+import { CourseMaterialSource } from './entities/course-material-source.entity';
 
 @Injectable()
 export class CourseMaterialsService {
@@ -19,6 +20,13 @@ export class CourseMaterialsService {
 
     @InjectRepository(CourseMaterial)
     private readonly courseMaterialRepository: Repository<CourseMaterial>,
+
+    @InjectRepository(MaterialProgress)
+    private readonly materialProgressRepository: Repository<MaterialProgress>,
+
+    @InjectRepository(CourseMaterialSource)
+    private readonly courseMaterialSourceRepository: Repository<CourseMaterialSource>,
+
   ) {}
   // logic buat endpoint list materi pembelajaran
   async findAll(goalId: string, levelId: string, user: AuthenticatedUser) {
@@ -117,7 +125,16 @@ export class CourseMaterialsService {
         )
     }
 
-    return material;
+    const sources = await this.courseMaterialSourceRepository.find({
+      where: {
+        materialId: materialId
+      },
+    });
+
+    return {
+      ...material,
+      sources,
+    }
     
   }
 
@@ -147,7 +164,7 @@ export class CourseMaterialsService {
 
   async archive(materialId: string) {
     const material = await this.courseMaterialRepository.findOne({
-      where: { id: materialId},
+      where: { id: materialId },
     });
 
     if (!material) {
@@ -160,4 +177,37 @@ export class CourseMaterialsService {
 
     return this.courseMaterialRepository.save(material);
   }
+
+  async saveProgress(
+    userId: string,
+    goalId: string,
+    materialId: string,
+  ) {
+    const existingProgress =
+      await this.materialProgressRepository.findOne({
+        where: {
+          userId,
+          goalId,
+          materialId,
+        },
+      });
+
+    if (existingProgress) {
+      if (!existingProgress.completedAt) {
+        existingProgress.completedAt = new Date();
+      }
+
+      return this.materialProgressRepository.save(existingProgress);
+    }
+
+    const progress = this.materialProgressRepository.create({
+      userId,
+      goalId,
+      materialId,
+      completedAt: new Date(),
+    });
+
+    return this.materialProgressRepository.save(progress);
+  }
 }
+
