@@ -5,7 +5,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../auth/enums/user-role.enum';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface'
+import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 
 
 @Controller('/goals/:goalId/levels/:levelId/materials')
@@ -31,9 +31,9 @@ export class CourseMaterialsController {
 
   @Get(':materialId')
     findOne(
-        @Param('goalId') goalId: string,
-        @Param('levelId') levelId: string,
-        @Param('materialId') materialId: string,
+        @Param('goalId', ParseUUIDPipe) goalId: string,
+        @Param('levelId', ParseUUIDPipe) levelId: string,
+        @Param('materialId', ParseUUIDPipe) materialId: string,
         @CurrentUser() user: AuthenticatedUser
     ) {
         return this.courseMaterialsService.findOne(
