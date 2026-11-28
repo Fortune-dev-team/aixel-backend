@@ -329,8 +329,9 @@ export class MentorService {
     return {
       data: {
         candidate: candidates[0],
-        materialProgress: materialProgressSummary,
 
+        materialProgress: materialProgressSummary,
+        
         summary: [
           {
             section: 'Tes Awal',
