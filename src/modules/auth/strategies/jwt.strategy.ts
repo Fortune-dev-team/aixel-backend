@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Repository } from 'typeorm';
+import { normalizeUserRole } from '../enums/user-role.enum';
 import type { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
 import { User } from '../../users/entities/user.entity';
 
@@ -31,11 +32,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
+    const role = normalizeUserRole(user.role);
+    if (typeof user.fullName !== 'string' || role === null) {
+      throw new UnauthorizedException();
+    }
+
     return {
       id: user.id,
       fullName: user.fullName,
       email: user.email,
-      role: user.role,
+      role,
     };
   }
 }

@@ -1,34 +1,56 @@
-import { JwtService } from '@nestjs/jwt';
-import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
 
 describe('AuthService', () => {
-  describe('register', () => {
-    it('sets updatedAt when creating a user', async () => {
-      const usersRepository = {
-        findOneBy: jest.fn().mockResolvedValue(null),
-        create: jest.fn((user: Partial<User>) => user as User),
-        save: jest.fn((user: User) => Promise.resolve(user)),
-      } as unknown as Repository<User>;
-      const jwtService = {
-        signAsync: jest.fn().mockResolvedValue('access-token'),
-      } as unknown as JwtService;
-      const service = new AuthService(usersRepository, jwtService);
+  let authService: AuthService;
+  const usersRepository = {
+    findOneBy: jest.fn(),
+    create: jest.fn((user) => user),
+    save: jest.fn(),
+  };
+  const jwtService = {
+    signAsync: jest.fn(),
+  };
 
-      await service.register({
+  beforeEach(() => {
+    jest.clearAllMocks();
+    authService = new AuthService(usersRepository as never, jwtService as never);
+    usersRepository.findOneBy.mockResolvedValue(null);
+    jwtService.signAsync.mockResolvedValue('access-token');
+    usersRepository.save.mockImplementation(async (user) => user);
+  });
+
+  it('does not persist a user when access-token creation fails', async () => {
+    jwtService.signAsync.mockRejectedValue(new Error('JWT signing failed'));
+
+    await expect(
+      authService.register({
         fullName: 'Test User',
         email: 'test@example.com',
         password: 'password123',
         confirmPassword: 'password123',
-      } satisfies RegisterDto);
+      }),
+    ).rejects.toThrow('JWT signing failed');
 
-      expect(usersRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          updatedAt: expect.any(Date),
-        }),
-      );
+    expect(usersRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('persists the user and returns the authentication response', async () => {
+    const response = await authService.register({
+      fullName: 'Test User',
+      email: 'test@example.com',
+      password: 'password123',
+      confirmPassword: 'password123',
+    });
+
+    expect(usersRepository.save).toHaveBeenCalledTimes(1);
+    expect(response).toEqual({
+      accessToken: 'access-token',
+      user: {
+        id: expect.any(String),
+        fullName: 'Test User',
+        email: 'test@example.com',
+        role: 'tim',
+      },
     });
   });
 });

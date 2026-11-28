@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import { QueryFailedError, Repository } from 'typeorm';
-import { UserRole } from './enums/user-role.enum';
+import { UserRole, normalizeUserRole } from './enums/user-role.enum';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { User } from '../users/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
@@ -45,6 +45,7 @@ export class AuthService {
       role: UserRole.TEAM,
       updatedAt: new Date(),
     });
+    const authResponse = await this.createAuthResponse(user);
 
     try {
       await this.usersRepository.save(user);
@@ -55,7 +56,7 @@ export class AuthService {
       throw error;
     }
 
-    return this.createAuthResponse(user);
+    return authResponse;
   }
 
   async login(loginDto: LoginDto) {
@@ -70,10 +71,11 @@ export class AuthService {
       .where('user.email = :email', { email })
       .getOne();
 
-    if (
-      !user ||
-      !(await bcrypt.compare(loginDto.password, user.passwordHash))
-    ) {
+    if (!user || typeof user.passwordHash !== 'string') {
+      throw new UnauthorizedException('Email atau kata sandi salah');
+    }
+
+    if (!(await bcrypt.compare(loginDto.password, user.passwordHash))) {
       throw new UnauthorizedException('Email atau kata sandi salah');
     }
 
@@ -81,24 +83,30 @@ export class AuthService {
   }
 
   private async createAuthResponse(user: User) {
+    const authenticatedUser = this.toAuthenticatedUser(user);
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
-      role: user.role,
+      role: authenticatedUser.role,
     });
 
     return {
       accessToken,
-      user: this.toAuthenticatedUser(user),
+      user: authenticatedUser,
     };
   }
 
   private toAuthenticatedUser(user: User): AuthenticatedUser {
+    const role = normalizeUserRole(user.role);
+    if (typeof user.fullName !== 'string' || role === null) {
+      throw new UnauthorizedException('Email atau kata sandi salah');
+    }
+
     return {
       id: user.id,
       fullName: user.fullName,
       email: user.email,
-      role: user.role,
+      role,
     };
   }
 
