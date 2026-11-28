@@ -49,6 +49,11 @@ export class AdminKnowledgeManagementController {
     return this.service.getCoverage();
   }
 
+  @Get('dead-links')
+  getDeadLinks() {
+    return this.service.getDeadLinks();
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get knowledge source detail',
@@ -124,6 +129,33 @@ export class AdminKnowledgeManagementController {
   ) {
     return this.service.checkLink(user.id, id);
   }
+
+  @Post(':id/reprocess')
+  reprocess(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.reprocess(user.id, id);
+  }
+
+  @Post(':id/verify')
+  verify(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.verify(user.id, id);
+  }
+
+  @Get(':id/chunks')
+  getChunks(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.getChunks(id);
+  }
+
+  @Post('check-links')
+  checkLinks(@CurrentUser() user: AuthenticatedUser) {
+    return this.service.checkLinks(user.id);
+  }
+
 
   @Delete(':id')
   @ApiOperation({

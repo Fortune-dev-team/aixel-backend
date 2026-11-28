@@ -1,12 +1,10 @@
 import {
   BadRequestException,
-  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, type PrismaClient } from '@prisma/client';
-import { createHash } from 'crypto';
 import { lookup } from 'dns/promises';
 import { isIP } from 'net';
 
@@ -593,6 +591,104 @@ export class AdminKnowledgeManagementService {
         count: item._count._all,
       })),
     };
+  }
+
+  async reprocess(adminId: string, id: string) {
+    const before = await this.getActiveSourceForMutation(id);
+    const row = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.knowledgeSources.update({
+        where: { id },
+        data: { status: 'PENDING', ingestion_error: null },
+        select: KNOWLEDGE_SOURCE_SELECT,
+      });
+      await tx.auditLogs.create({
+        data: {
+          actor_id: adminId,
+          action: 'KNOWLEDGE_SOURCE_REPROCESS',
+          entity_type: 'knowledge_source',
+          entity_id: id,
+          before_data: before,
+          after_data: updated,
+          reason: 'Knowledge source reprocessing requested',
+        },
+      });
+      return updated;
+    });
+    return { message: 'Reprocessing knowledge source telah dijadwalkan', data: row };
+  }
+
+  async verify(adminId: string, id: string) {
+    const before = await this.getActiveSourceForMutation(id);
+    const row = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.knowledgeSources.update({
+        where: { id },
+        data: { verified_at: new Date(), verified_by: adminId },
+        select: KNOWLEDGE_SOURCE_SELECT,
+      });
+      await tx.auditLogs.create({
+        data: {
+          actor_id: adminId,
+          action: 'KNOWLEDGE_SOURCE_VERIFIED',
+          entity_type: 'knowledge_source',
+          entity_id: id,
+          before_data: before,
+          after_data: updated,
+          reason: 'Knowledge source verified by admin',
+        },
+      });
+      return updated;
+    });
+    return row;
+  }
+
+  async getChunks(id: string) {
+    await this.getActiveSourceForMutation(id);
+    return this.prisma.knowledgeChunks.findMany({
+      where: { source_id: id },
+      orderBy: { chunk_index: 'asc' },
+      select: {
+        id: true,
+        chunk_index: true,
+        content: true,
+        token_count: true,
+        embedding_model: true,
+        metadata: true,
+        created_at: true,
+      },
+    });
+  }
+
+  async checkLinks(adminId: string) {
+    const sources = await this.prisma.knowledgeSources.findMany({
+      where: { deleted_at: null, url: { not: null } },
+      select: { id: true, url: true },
+    });
+    let checked = 0;
+    for (const source of sources) {
+      await this.checkLink(adminId, source.id);
+      checked++;
+    }
+    return { total: sources.length, checked };
+  }
+
+  async getDeadLinks() {
+    const rows = await this.prisma.knowledgeSources.findMany({
+      where: {
+        deleted_at: null,
+        OR: [{ link_status: 'dead' }, { link_status: 'unreachable' }, { link_status: 'invalid' }],
+      },
+      orderBy: { last_link_checked_at: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        url: true,
+        link_status: true,
+        last_link_checked_at: true,
+        attribute_id: true,
+        level_id: true,
+      },
+    });
+    return { total: rows.length, data: rows };
   }
 
   /**

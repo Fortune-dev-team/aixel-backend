@@ -27,7 +27,6 @@ export class RenewalsService {
   async create(userId: string, dto: CreateRenewalDto) {
     const memberAttribute = await this.prisma.memberAttributes.findFirst({
       where: {
-        id: undefined,
         user_id: userId,
       },
       orderBy: {
@@ -96,6 +95,77 @@ export class RenewalsService {
       message: 'Pengajuan renewal berhasil dibuat',
       data: renewal,
     };
+  }
+
+  async createForMemberAttribute(
+    userId: string,
+    memberAttributeId: string,
+    dto: CreateRenewalDto,
+  ) {
+    const memberAttribute = await this.prisma.memberAttributes.findFirst({
+      where: { id: memberAttributeId, user_id: userId },
+      select: {
+        id: true,
+        user_id: true,
+        attribute_id: true,
+        expires_at: true,
+      },
+    });
+    if (!memberAttribute) {
+      throw new ForbiddenException(
+        'Member attribute tidak ditemukan atau bukan milik pengguna',
+      );
+    }
+    if (!memberAttribute.attribute_id) {
+      throw new BadRequestException('Member attribute belum memiliki attribute');
+    }
+    const existing = await this.prisma.attributeRefreshRequests.findFirst({
+      where: { member_attribute_id: memberAttributeId, status: 'SUBMITTED' },
+    });
+    if (existing) {
+      throw new BadRequestException('Masih ada pengajuan renewal yang menunggu review');
+    }
+    const renewal = await this.prisma.attributeRefreshRequests.create({
+      data: {
+        member_attribute_id: memberAttribute.id,
+        user_id: userId,
+        status: 'SUBMITTED',
+        project_name: dto.project_name,
+        project_description: dto.project_description,
+        role_in_project: dto.role_in_project,
+        project_period: dto.project_period,
+        previous_expires_at: memberAttribute.expires_at,
+        submitted_at: new Date(),
+      },
+    });
+    return { message: 'Pengajuan renewal berhasil dibuat', data: renewal };
+  }
+
+  async findRequestsForMemberAttribute(
+    userId: string,
+    memberAttributeId: string,
+    isAdmin: boolean,
+  ) {
+    const memberAttribute = await this.prisma.memberAttributes.findUnique({
+      where: { id: memberAttributeId },
+      select: { id: true, user_id: true },
+    });
+    if (!memberAttribute) {
+      throw new NotFoundException('Member attribute tidak ditemukan');
+    }
+    if (!isAdmin && memberAttribute.user_id !== userId) {
+      throw new ForbiddenException(
+        'Anda tidak memiliki akses terhadap member attribute ini',
+      );
+    }
+    const data = await this.prisma.attributeRefreshRequests.findMany({
+      where: { member_attribute_id: memberAttributeId },
+      orderBy: { submitted_at: 'desc' },
+      include: {
+        AttributeRefreshEvidences_refresh_request_id_items: true,
+      },
+    });
+    return { total: data.length, data };
   }
 
   /**

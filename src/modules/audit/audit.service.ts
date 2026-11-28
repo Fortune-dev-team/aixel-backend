@@ -12,6 +12,37 @@ export class AuditService {
     private readonly prisma: PrismaClient,
   ) {}
 
+  async createExport(
+    adminId: string,
+    exportType: string,
+    filters: object,
+  ) {
+    const job = await this.prisma.exportJobs.create({
+      data: {
+        requested_by: adminId,
+        export_type: exportType,
+        filters: filters as any,
+        status: 'PENDING',
+      },
+    });
+    return job;
+  }
+
+  async getExport(id: string) {
+    const job = await this.prisma.exportJobs.findUnique({ where: { id } });
+    if (!job) throw new BadRequestException(`Export job "${id}" tidak ditemukan`);
+    return job;
+  }
+
+  async downloadExport(id: string) {
+    const job = await this.prisma.exportJobs.findUnique({ where: { id } });
+    if (!job) throw new BadRequestException(`Export job "${id}" tidak ditemukan`);
+    if (!job.file_key) {
+      throw new BadRequestException('Export belum selesai atau belum memiliki file');
+    }
+    return { file_key: job.file_key, download_url: null };
+  }
+
   async findAll(dto: AuditLogQueryDto) {
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 20;

@@ -16,6 +16,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { AddRenewalEvidenceDto } from './dto/add-renewal-evidence.dto';
 import { CreateRenewalDto } from './dto/create-renewal.dto';
 import { ReviewRenewalDto } from './dto/review-renewal.dto';
+import { ReviewRenewalActionDto } from './dto/review-renewal-action.dto';
 import { RenewalsService } from './renewals.service';
 
 @ApiTags('Renewals')
@@ -125,5 +126,83 @@ export class RenewalsController {
     @Body() dto: ReviewRenewalDto,
   ) {
     return this.renewalsService.review(admin.id, renewalId, dto);
+  }
+}
+
+@ApiTags('Renewals')
+@ApiBearerAuth()
+@Controller('member-attributes')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class MemberAttributeRenewalsController {
+  constructor(private readonly renewalsService: RenewalsService) {}
+
+  @Post(':id/refresh-requests')
+  @Roles(UserRole.TEAM)
+  create(
+    @Param('id') memberAttributeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateRenewalDto,
+  ) {
+    return this.renewalsService.createForMemberAttribute(
+      user.id,
+      memberAttributeId,
+      dto,
+    );
+  }
+
+  @Get(':id/refresh-requests')
+  @Roles(UserRole.TEAM, UserRole.ADMIN)
+  findRequests(
+    @Param('id') memberAttributeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.renewalsService.findRequestsForMemberAttribute(
+      user.id,
+      memberAttributeId,
+      user.role === UserRole.ADMIN,
+    );
+  }
+}
+
+@ApiTags('Renewals')
+@ApiBearerAuth()
+@Controller('admin/refresh-requests')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
+export class AdminRenewalsController {
+  constructor(private readonly renewalsService: RenewalsService) {}
+
+  @Get()
+  findAll() {
+    return this.renewalsService.findAllForAdmin();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') renewalId: string) {
+    return this.renewalsService.findOneForAdmin(renewalId);
+  }
+
+  @Post(':id/approve')
+  approve(
+    @Param('id') renewalId: string,
+    @CurrentUser() admin: AuthenticatedUser,
+    @Body() dto: ReviewRenewalActionDto,
+  ) {
+    return this.renewalsService.review(admin.id, renewalId, {
+      ...dto,
+      decision: 'APPROVED',
+    });
+  }
+
+  @Post(':id/reject')
+  reject(
+    @Param('id') renewalId: string,
+    @CurrentUser() admin: AuthenticatedUser,
+    @Body() dto: ReviewRenewalActionDto,
+  ) {
+    return this.renewalsService.review(admin.id, renewalId, {
+      ...dto,
+      decision: 'REJECTED',
+    });
   }
 }

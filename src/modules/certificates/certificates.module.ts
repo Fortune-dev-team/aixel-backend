@@ -6,11 +6,14 @@ import { PrismaClient } from '@prisma/client';
 import { AuthModule } from '../auth/auth.module';
 
 import { CertificatesService, PRISMA_CLIENT } from './certificates.service';
-import { CertificatesController } from './certificates.controller';
+import {
+  CertificatesController,
+  PublicCertificatesController,
+} from './certificates.controller';
 
 @Module({
   imports: [AuthModule],
-  controllers: [CertificatesController],
+  controllers: [CertificatesController, PublicCertificatesController],
   providers: [
     CertificatesService,
     {

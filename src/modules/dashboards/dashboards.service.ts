@@ -270,4 +270,138 @@ export class DashboardsService {
       })),
     };
   }
+
+  async getAttributeDistribution() {
+    const rows = await this.prisma.memberAttributes.groupBy({
+      by: ['attribute_id'],
+      _count: { _all: true },
+    });
+    const data = await Promise.all(
+      rows.map(async (row) => {
+        const attribute = row.attribute_id
+          ? await this.prisma.attributes.findUnique({
+              where: { id: row.attribute_id },
+              select: { id: true, code: true, name: true },
+            })
+          : null;
+        return { attribute, count: row._count._all };
+      }),
+    );
+    return { total: data.length, data };
+  }
+
+  async getMentorsPerAttribute() {
+    const rows = await this.prisma.memberAttributes.findMany({
+      where: {
+        status: 'ACTIVE',
+        is_accepting_mentees: true,
+        OR: [{ expires_at: null }, { expires_at: { gt: new Date() } }],
+      },
+      select: {
+        attribute_id: true,
+        Attributes_attribute_id: {
+          select: { id: true, code: true, name: true },
+        },
+        Users_user_id: {
+          select: { id: true, full_name: true },
+        },
+      },
+    });
+    const grouped = new Map<string, { attribute: any; mentors: any[] }>();
+    for (const row of rows) {
+      if (!row.attribute_id) continue;
+      const entry = grouped.get(row.attribute_id) ?? {
+        attribute: row.Attributes_attribute_id,
+        mentors: [],
+      };
+      entry.mentors.push(row.Users_user_id);
+      grouped.set(row.attribute_id, entry);
+    }
+    return {
+      total: grouped.size,
+      data: Array.from(grouped.values()).map((item) => ({
+        attribute: item.attribute,
+        mentor_count: item.mentors.length,
+        mentors: item.mentors,
+      })),
+    };
+  }
+
+  async getExpiring() {
+    const now = new Date();
+    const limit = new Date(now);
+    limit.setDate(limit.getDate() + 30);
+    const data = await this.prisma.memberAttributes.findMany({
+      where: {
+        expires_at: { gte: now, lte: limit },
+      },
+      orderBy: { expires_at: 'asc' },
+      include: {
+        Users_user_id: { select: { id: true, full_name: true, email: true } },
+        Attributes_attribute_id: { select: { id: true, code: true, name: true } },
+      },
+    });
+    return { total: data.length, data };
+  }
+
+  async getCoverageGaps() {
+    const [attributes, levels] = await Promise.all([
+      this.prisma.attributes.findMany({
+        where: { is_active: true, archived_at: null },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          AttributeLevels_attribute_id_items: {
+            select: {
+              id: true,
+              level_number: true,
+              title: true,
+              KnowledgeSources_level_id_items: {
+                where: { deleted_at: null },
+                select: { id: true },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.knowledgeSources.count({ where: { deleted_at: null } }),
+    ]);
+    const data = attributes.flatMap((attribute) =>
+      attribute.AttributeLevels_attribute_id_items
+        .filter((level) => level.KnowledgeSources_level_id_items.length === 0)
+        .map((level) => ({
+          attribute_id: attribute.id,
+          attribute_code: attribute.code,
+          attribute_name: attribute.name,
+          level_id: level.id,
+          level_number: level.level_number,
+          level_title: level.title,
+        })),
+    );
+    return { total_sources: levels, gap_count: data.length, data };
+  }
+
+  async getMemberProgress() {
+    const [goals, attempts] = await Promise.all([
+      this.prisma.goals.count(),
+      this.prisma.levelAttempts.count(),
+    ]);
+    const data = await this.prisma.goals.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 100,
+      include: {
+        Users_user_id: { select: { id: true, full_name: true, email: true } },
+        Attributes_attribute_id: { select: { id: true, code: true, name: true } },
+        GoalLevelProgress_goal_id_items: {
+          select: {
+            id: true,
+            status: true,
+            level_id: true,
+          },
+        },
+      },
+    });
+    return { total_goals: goals, total_attempts: attempts, data };
+  }
 }
