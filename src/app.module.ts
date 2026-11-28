@@ -27,6 +27,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AdminKnowledgeManagementModule } from './modules/admin-knowledge-management/admin-knowledge-management.module';
 import { RenewalsModule } from './modules/renewals/renewals.module';
 import { BullModule } from '@nestjs/bullmq';
+import { AiAssessmentModule } from './modules/course/ai-assessement.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { BullModule } from '@nestjs/bullmq';
     InterventionsModule,
     AuditModule,
     HealthModule,
+    AiAssessmentModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
