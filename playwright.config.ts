@@ -6,7 +6,10 @@ export default defineConfig({
 
   fullyParallel: false,
 
-  reporter: 'list',
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }]
+  ],
 
   use: {
     baseURL: 'http://localhost:5000/api/v1/',
