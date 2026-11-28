@@ -25,6 +25,7 @@ import { AttributesModule } from './modules/attributes/attributes.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminKnowledgeManagementModule } from './modules/admin-knowledge-management/admin-knowledge-management.module';
+import { RenewalsModule } from './modules/renewals/renewals.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { AdminKnowledgeManagementModule } from './modules/admin-knowledge-manage
     InterviewsModule,
     MemberAttributesModule,
     CertificatesModule,
+    RenewalsModule,
     NotificationsModule,
     DashboardsModule,
     AiMonitoringModule,
