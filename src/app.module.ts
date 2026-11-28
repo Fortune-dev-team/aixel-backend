@@ -28,6 +28,7 @@ import { AdminKnowledgeManagementModule } from './modules/admin-knowledge-manage
 import { RenewalsModule } from './modules/renewals/renewals.module';
 import { BullModule } from '@nestjs/bullmq';
 import { AiAssessmentModule } from './modules/course/ai-assessement.module';
+import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { AiAssessmentModule } from './modules/course/ai-assessement.module';
     AuditModule,
     HealthModule,
     AiAssessmentModule,
+    KnowledgeBaseModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
