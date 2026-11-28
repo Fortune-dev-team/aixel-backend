@@ -118,4 +118,9 @@ export class InterventionsController {
       admin.id,
     );
   }
+
+  @Get('mentor-requests/unresponsive')
+  getUnresponsiveMentorRequests() {
+    return this.interventionsService.getUnresponsiveMentorRequests();
+  }
 }

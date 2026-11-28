@@ -388,6 +388,23 @@ export class InterventionsService {
     };
   }
 
+  async getUnresponsiveMentorRequests() {
+    const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const rows = await this.prisma.mentorRequests.findMany({
+      where: {
+        status: 'PENDING',
+        created_at: { lt: cutoff },
+      },
+      orderBy: { created_at: 'asc' },
+      include: {
+        Users_mentee_id: { select: { id: true, full_name: true, email: true } },
+        Users_mentor_id: { select: { id: true, full_name: true, email: true } },
+        Attributes_attribute_id: { select: { id: true, code: true, name: true } },
+      },
+    });
+    return { total: rows.length, data: rows };
+  }
+
   private toAuditJson(value: unknown) {
     return JSON.parse(JSON.stringify(value));
   }

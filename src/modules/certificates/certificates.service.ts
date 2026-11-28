@@ -19,6 +19,57 @@ export class CertificatesService {
     private readonly prisma: PrismaClient,
   ) {}
 
+  async findMine(userId: string) {
+    return this.findAll({ user_id: userId });
+  }
+
+  async findMineById(id: string, userId: string) {
+    const certificate = await this.prisma.certificates.findFirst({
+      where: { id, user_id: userId },
+      select: {
+        id: true,
+        member_attribute_id: true,
+        user_id: true,
+        attribute_id: true,
+        certificate_number: true,
+        verification_code: true,
+        issued_at: true,
+        valid_until: true,
+        file_key: true,
+        status: true,
+        revoked_reason: true,
+        Users_user_id: {
+          select: { id: true, full_name: true, email: true },
+        },
+        Attributes_attribute_id: {
+          select: { id: true, code: true, name: true, validity_months: true },
+        },
+      },
+    });
+    if (!certificate) {
+      throw new NotFoundException(
+        'Certificate tidak ditemukan atau bukan milik pengguna',
+      );
+    }
+    return certificate;
+  }
+
+  async revoke(id: string, reason: string) {
+    const existing = await this.prisma.certificates.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Certificate dengan ID "${id}" tidak ditemukan`);
+    }
+    if (existing.status === 'REVOKED') {
+      throw new BadRequestException('Certificate sudah dicabut');
+    }
+    return this.prisma.certificates.update({
+      where: { id },
+      data: { status: 'REVOKED', revoked_reason: reason },
+    });
+  }
+
   /**
    * ADMIN:
    * Mendapatkan daftar sertifikat.
@@ -293,8 +344,10 @@ export class CertificatesService {
    * file_key tidak diisi karena repository belum memiliki
    * storage service yang dapat dijadikan dasar implementasi.
    */
-  async generatePdf(id: string): Promise<Buffer> {
-    const certificate = await this.findOne(id);
+  async generatePdf(id: string, userId?: string): Promise<Buffer> {
+    const certificate = userId
+      ? await this.findMineById(id, userId)
+      : await this.findOne(id);
 
     return new Promise<Buffer>((resolve, reject) => {
       const doc = new PDFDocument({

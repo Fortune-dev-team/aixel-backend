@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 
 import {
   ApiBearerAuth,
@@ -14,6 +14,8 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 
 import { AuditLogQueryDto } from './dto/audit-log-query.dto';
 import { AuditService } from './audit.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 
 @ApiTags('Admin Audit')
 @ApiBearerAuth()
@@ -41,5 +43,62 @@ export class AuditController {
   })
   findAll(@Query() dto: AuditLogQueryDto) {
     return this.auditService.findAll(dto);
+  }
+
+  @Post('exports')
+  createExport(
+    @CurrentUser() admin: AuthenticatedUser,
+    @Body() body: { export_type?: string; filters?: object },
+  ) {
+    return this.auditService.createExport(
+      admin.id,
+      body.export_type ?? 'CSV',
+      body.filters ?? {},
+    );
+  }
+
+  @Get('exports/:id')
+  getExport(
+    @Param('id') id: string,
+  ) {
+    return this.auditService.getExport(id);
+  }
+
+  @Get('exports/:id/download')
+  downloadExport(
+    @Param('id') id: string,
+  ) {
+    return this.auditService.downloadExport(id);
+  }
+}
+
+@ApiTags('Admin Exports')
+@ApiBearerAuth()
+@Controller('admin/exports')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
+export class AuditExportsController {
+  constructor(private readonly auditService: AuditService) {}
+
+  @Post()
+  createExport(
+    @CurrentUser() admin: AuthenticatedUser,
+    @Body() body: { export_type?: string; filters?: object },
+  ) {
+    return this.auditService.createExport(
+      admin.id,
+      body.export_type ?? 'CSV',
+      body.filters ?? {},
+    );
+  }
+
+  @Get(':id')
+  getExport(@Param('id') id: string) {
+    return this.auditService.getExport(id);
+  }
+
+  @Get(':id/download')
+  downloadExport(@Param('id') id: string) {
+    return this.auditService.downloadExport(id);
   }
 }

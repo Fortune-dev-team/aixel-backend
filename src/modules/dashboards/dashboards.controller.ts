@@ -39,6 +39,31 @@ export class DashboardsController {
     return this.dashboardsService.getOverview();
   }
 
+  @Get('attribute-distribution')
+  getAttributeDistribution() {
+    return this.dashboardsService.getAttributeDistribution();
+  }
+
+  @Get('mentors-per-attribute')
+  getMentorsPerAttribute() {
+    return this.dashboardsService.getMentorsPerAttribute();
+  }
+
+  @Get('expiring')
+  getExpiring() {
+    return this.dashboardsService.getExpiring();
+  }
+
+  @Get('coverage-gaps')
+  getCoverageGaps() {
+    return this.dashboardsService.getCoverageGaps();
+  }
+
+  @Get('member-progress')
+  getMemberProgress() {
+    return this.dashboardsService.getMemberProgress();
+  }
+
   @Get('member-statistics')
   @ApiOperation({
     summary: 'Get member statistics',

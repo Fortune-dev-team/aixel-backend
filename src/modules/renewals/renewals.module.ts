@@ -6,11 +6,19 @@ import { PrismaClient } from '@prisma/client';
 import { AuthModule } from '../auth/auth.module';
 
 import { RenewalsService, PRISMA_CLIENT } from './renewals.service';
-import { RenewalsController } from './renewals.controller';
+import {
+  AdminRenewalsController,
+  MemberAttributeRenewalsController,
+  RenewalsController,
+} from './renewals.controller';
 
 @Module({
   imports: [AuthModule],
-  controllers: [RenewalsController],
+  controllers: [
+    RenewalsController,
+    MemberAttributeRenewalsController,
+    AdminRenewalsController,
+  ],
   providers: [
     RenewalsService,
     {
