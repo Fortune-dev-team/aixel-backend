@@ -26,6 +26,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminKnowledgeManagementModule } from './modules/admin-knowledge-management/admin-knowledge-management.module';
 import { RenewalsModule } from './modules/renewals/renewals.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -38,6 +39,25 @@ import { RenewalsModule } from './modules/renewals/renewals.module';
         autoLoadEntities: true,
         synchronize: false,
       }),
+    }),
+    BullModule.forRootAsync({
+    inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const redisUrl = new URL(config.getOrThrow<string>('REDIS_URL'));
+
+        return {
+          connection: {
+            host: redisUrl.hostname,
+            port: Number(redisUrl.port || 6379),
+            username: redisUrl.username || undefined,
+            password: redisUrl.password || undefined,
+            db: redisUrl.pathname.length > 1
+              ? Number(redisUrl.pathname.slice(1))
+              : 0,
+            tls: redisUrl.protocol === 'rediss:' ? {} : undefined,
+          },
+        };
+      },
     }),
     AuthModule,
     UsersModule,
